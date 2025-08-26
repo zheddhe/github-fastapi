@@ -54,8 +54,12 @@
 #   "other": "something else"
 # }'
 
-curl -X GET -i http://127.0.0.1:8000/headers
+# curl -X GET -i http://127.0.0.1:8000/headers
 
-curl -X GET \
-     -H 'User-Agent: MyCustomClient/1.0' \
-     -i http://127.0.0.1:8000/headers
+# curl -X GET \
+#      -H 'User-Agent: MyCustomClient/1.0' \
+#      -i http://127.0.0.1:8000/headers
+
+curl -X GET -i http://127.0.0.1:8000/data?index=my_index
+
+curl -X GET -i http://127.0.0.1:8000/data?index=1234
