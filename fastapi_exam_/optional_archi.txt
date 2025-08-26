@@ -1,10 +1,10 @@
 Architecture :
 - l'API utilise une base de données représentée par le chargement d'un fichier CSV (utilisation d'un dataframe Pandas)
 - l'API utilises FastAPI et devra précharger cette BDD CSV au lancement
-- l'état du dataframe NE sera PAS sauvegardé après utilisation de l'API (par exemple les actions la modifiant en mémoire)
+- l'état du dataframe NE sera PAS sauvegardé dans le CSV après utilisation de l'API (par exemple les actions la modifiant en mémoire)
 - la sécurité est gérée via le framework HTTPBasicCredentials afin de permettre une intégration automatique avec OpenApi (docs)
     => gestion simplifiée (les identifiants a vérifier ne sont pas stocké dans un wallet et sont en dur dans le code)
-- j'aurai préféré pouvoir mettre certaines fonction en librairie mais vu la contrainte d'avoir un seul source main.py
+- vu la contrainte d'avoir un seul source main.py j'ai décomposé en sections comme suit
     => les différentes sections sont regroupées ainsi :
     - OpenAPI / tags
     - Modèles (avec description des champs intégrée)
@@ -12,3 +12,9 @@ Architecture :
     - Documentation (globale) des réponses
     - Fonctions utilitaires
     - Définition des Routes
+- pour la route /create_question 
+    => je n'ai pas trouvé de directive expliquant ce qui est attendu pour les contrôles réponse donc j'ai retenu : 
+    - creation sans controle poussé autre que la validation par le modèle de requete
+    - pas de verification de l'authentification admin ou user (je préconiserai d'ailleurs de ne pas mettre le user/mot de passe 
+      en clair dans la requete et garder l'authentification header HTTPBasicCredentials à minima, mais j'ai taché de respecter 
+      le cahier des charges de l'énoncé)

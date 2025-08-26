@@ -74,6 +74,19 @@ class QuizItem(BaseModel):
     responseD: Optional[str] = Field(..., description="Contenu formulé de la réponse D")
 
 
+class QuestionRequest(BaseModel):
+    admin_username: str = Field(..., description="username admin")
+    admin_password: str = Field(..., description="password admin")
+    question: str = Field(..., description="Contenu formulé de la question")
+    subject: str = Field(..., description="Sujet ou thème de la question")
+    correct: List[str] = Field(..., description="Ensemble des réponses correctes")
+    use: str = Field(..., description="Type de test souhaité")
+    responseA: str = Field(..., description="Contenu formulé de la réponse A")
+    responseB: str = Field(..., description="Contenu formulé de la réponse B")
+    responseC: str = Field(..., description="Contenu formulé de la réponse C")
+    responseD: Optional[str] = Field(..., description="Contenu formulé de la réponse D")
+
+
 # ---------------------------------------------------------------------------
 # Exception métier personalisée + son handler
 # ---------------------------------------------------------------------------
@@ -154,7 +167,7 @@ def _check_credentials(credentials: HTTPBasicCredentials = Depends(security)):
         )
 
 
-def _validate_parameters(quiz_request: QuizRequest):
+def _validate_quiz_parameters(quiz_request: QuizRequest):
     if quiz_request.nb_questions <= 0:
         raise CustomException(
             type="Nombre de question demandé incorrect",
@@ -258,6 +271,61 @@ def _parse_correct(row: pd.Series) -> List[str]:
     ]
 
 
+def _validate_question_parameters(question_request: QuestionRequest):
+    proposed_responses = {
+        "A": question_request.responseA,
+        "B": question_request.responseB,
+        "C": question_request.responseC,
+        "D": question_request.responseD,
+    }
+    logger.info(f"{question_request.correct} <=> {list(proposed_responses.values())}")
+    if not question_request.correct:
+        raise CustomException(
+            type="Aucune réponse correcte proposée dans les réponses",
+            message=f"question_request.correct = {question_request.correct}",
+            date=str(datetime.datetime.now()),
+        )
+    if not all(val in proposed_responses.values() for val in question_request.correct):
+        raise CustomException(
+            type="Réponse correcte non proposée dans les réponses",
+            message=f"question_request.correct = {question_request.correct}",
+            date=str(datetime.datetime.now()),
+        )
+
+
+def _store_question(question_request: QuestionRequest):
+    try:
+        responses_map = {
+            question_request.responseA: "A",
+            question_request.responseB: "B",
+            question_request.responseC: "C",
+            question_request.responseD: "D",
+        }
+        correct = []
+        for response in question_request.correct:
+            correct.append(responses_map[response])
+        new_row = {
+            "question": question_request.question,
+            "subject": question_request.subject,
+            "use": question_request.use,
+            "correct": correct,
+            "responseA": question_request.responseA,
+            "responseB": question_request.responseB,
+            "responseC": question_request.responseC,
+            "responseD": question_request.responseD,
+            "remark": "",
+        }
+        global df
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        logger.info(f"Question stored. index={len(df) - 1}")
+    except Exception as exc:
+        logger.exception("Error while storing question")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de la sauvegarde de la question",
+        ) from exc
+
+
 # ---------------------------------------------------------------------------
 # Définition des Routes
 # ---------------------------------------------------------------------------
@@ -305,16 +373,37 @@ def post_generate_quiz(quiz_request: QuizRequest,
     METHOD :
         generation en POST d'un QCM avec paramètres dans le payload
     PAYLOAD : (Cf. QuizRequest)
-        "test_type": Le type de test souhaité (par exemple "Test de positionnement").
-        "categories": Une liste des catégories de questions souhaitées.
-        "number_of_questions": Le nombre de questions à inclure dans le QCM.
+        QuizRequest
     RESPONSE : (Cf. QuizItem)
         List[QuizItem]
     """
-    logger.info(f"l'utilisateur [{user}] a accédé à la ressource post_generate_quiz")
-    try:
-        _validate_parameters(quiz_request)
-        quiz_items = _select_random_responses(quiz_request)
-        return quiz_items
-    except IndexError as exc:
-        raise HTTPException(status_code=404, detail="Ligne non trouvée") from exc
+    logger.info(f"l'utilisateur [{user}] a accédé à la route post_generate_quiz")
+    _validate_quiz_parameters(quiz_request)
+    quiz_items = _select_random_responses(quiz_request)
+    return quiz_items
+
+
+@app.post(
+    "/create_question",
+    tags=["QCMs"],
+    summary="Créer question",
+    description=(
+        "Crée une nouvelle question par un utilisateur admin.\n"
+        "Pas d'authentification demandée."
+    ),
+    responses=generic_responses,
+)
+def post_create_question(question_request: QuestionRequest):
+    """
+    METHOD :
+        generation en POST d'un QCM avec paramètres dans le payload
+    PAYLOAD : (Cf. QuestionRequest)
+        QuestionRequest
+    RESPONSE :
+        Dict[str]
+    """
+    logger.info(f"l'utilisateur [{question_request.admin_username}] "
+                "a accédé à la route post_create_question")
+    _validate_question_parameters(question_request)
+    _store_question(question_request)
+    return {"message": "Question créée avec succès."}

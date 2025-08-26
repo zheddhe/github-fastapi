@@ -154,3 +154,84 @@ curl -X 'POST' \
   "nb_questions": 6
 }'
 echo '### test generate_quiz OK avec shuffle fin'
+
+### Tests unitaires /create_question
+curl -X 'POST' \
+  'http://127.0.0.1:8000/create_question' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "admin_username": "admin",
+  "admin_password": "4dm1N",
+  "question": "Quelle est la capitale de la France ?",
+  "subject": "geography",
+  "correct": [
+    "UNKNOWN"
+  ],
+  "use": "multiple_choice",
+  "responseA": "Londres",
+  "responseB": "Paris",
+  "responseC": "Berlin",
+  "responseD": "Madrid"
+}'
+echo '### test create_question réponse inconnue fin'
+
+curl -X 'POST' \
+  'http://127.0.0.1:8000/create_question' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "admin_username": "admin",
+  "admin_password": "4dm1N",
+  "question": "Quelle est la capitale de la France ?",
+  "subject": "geography",
+  "correct": [],
+  "use": "multiple_choice",
+  "responseA": "Londres",
+  "responseB": "Paris",
+  "responseC": "Berlin",
+  "responseD": "Madrid"
+}'
+echo '### test create_question aucune reponse fin'
+
+curl -X 'POST' \
+  'http://127.0.0.1:8000/create_question' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "admin_username": "admin",
+  "admin_password": "4dm1N",
+  "question": "Quelle est la capitale de la France ?",
+  "subject": "geography",
+  "correct": [
+    "Paris",
+    "Tokyo"
+  ],
+  "use": "multiple_choice",
+  "responseA": "Londres",
+  "responseB": "Paris",
+  "responseC": "Berlin",
+  "responseD": "Madrid"
+}'
+echo '### test create_question réponse multiple non connues totalement fin'
+
+curl -X 'POST' \
+  'http://127.0.0.1:8000/create_question' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "admin_username": "admin",
+  "admin_password": "4dm1N",
+  "question": "Quelle est la capitale de la France ?",
+  "subject": "geography",
+  "correct": [
+    "Paris",
+    "Berlin"
+  ],
+  "use": "multiple_choice",
+  "responseA": "Londres",
+  "responseB": "Paris",
+  "responseC": "Berlin",
+  "responseD": "Madrid"
+}'
+echo '### test create_question OK fin'
