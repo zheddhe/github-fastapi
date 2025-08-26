@@ -1,0 +1,14 @@
+Architecture :
+- l'API utilise une base de données représentée par le chargement d'un fichier CSV (utilisation d'un dataframe Pandas)
+- l'API utilises FastAPI et devra précharger cette BDD CSV au lancement
+- l'état du dataframe NE sera PAS sauvegardé après utilisation de l'API (par exemple les actions la modifiant en mémoire)
+- la sécurité est gérée via le framework HTTPBasicCredentials afin de permettre une intégration automatique avec OpenApi (docs)
+    => gestion simplifiée (les identifiants a vérifier ne sont pas stocké dans un wallet et sont en dur dans le code)
+- j'aurai préféré pouvoir mettre certaines fonction en librairie mais vu la contrainte d'avoir un seul source main.py
+    => les différentes sections sont regroupées ainsi :
+    - OpenAPI / tags
+    - Modèles (avec description des champs intégrée)
+    - Exception métier personalisée + son handler
+    - Documentation (globale) des réponses
+    - Fonctions utilitaires
+    - Définition des Routes

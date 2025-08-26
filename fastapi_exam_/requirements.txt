@@ -1,0 +1,6 @@
+fastapi
+httptools==0.1.*
+uvloop
+uvicorn[standard] # permet de recharger uvicorn (reload) via certains fichiers cibles uniquement
+requests
+pandas
