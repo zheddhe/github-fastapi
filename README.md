@@ -1,2 +1,2 @@
-# github-fastapi
-training for fastapi
+# fastapi-training
+training repository for fastapi
